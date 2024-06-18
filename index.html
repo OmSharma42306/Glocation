@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Location-based Attendance System</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" integrity="sha512-xMQzHxGNBRzUfYtPln0YQv1 Außy9Tgsz_hJqWh/xDhwCYaUjKoC5HwjyhwkatKEBw6SQtIIAvvYnPLeNwdP(A==" crossorigin=""/>
+</head>
+<body>
+  <h1>Location-based Attendance System</h1>
+  <div id="map-container" style="width: 400px; height: 300px;"></div>
+  <button id="set-location-1">Set Corner 1</button>
+  <button id="set-location-2" disabled>Set Corner 2</button>
+  <button id="set-location-3" disabled>Set Corner 3</button>
+  <button id="set-location-4" disabled>Set Corner 4</button>
+  <button id="check-location" disabled>Check Location</button>
+  <div id="status"></div>
+  <div id="coordinates"></div>
+
+  <script>
+    let cornerCoordinates = [];
+    let currentCorner = 0;
+    let classroomPolygon; // Leaflet polygon object
+
+    const mapContainer = document.getElementById('map-container');
+    const map = L.map(mapContainer).setView([0, 0], 16); // Initial view (replace with your classroom location)
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    document.getElementById('set-location-1').addEventListener('click', () => setLocation(1));
+    // ... (rest of event listener code for other buttons)
+
+    function setLocation(cornerNumber) {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+          setCornerCoordinates(cornerNumber, position);
+        }, errorCallback);
+      } else {
+        alert('Geolocation is not supported by this browser.');
+      }
+    }
+
+    function setCornerCoordinates(cornerNumber, position) {
+      const coordinates = [position.coords.latitude, position.coords.longitude];
+      cornerCoordinates[cornerNumber - 1] = coordinates;
+      currentCorner++;
+
+      document.getElementById('coordinates').innerText += `Corner ${cornerNumber} Coordinates: Latitude: ${coordinates[0]}, Longitude: ${coordinates[1]}\n`;
+      // Update polygon and map view if all corners are set
+      if (currentCorner === 4) {
+        classroomPolygon = L.polygon(cornerCoordinates, { color: 'blue' }).addTo(map);
+        map.fitBounds(classroomPolygon.getBounds()); // Adjust map view to fit polygon
+        document.getElementById('status').innerText = 'All corners set.';
+        document.getElementById('check-location').disabled = false;
+      }
+
+      // ... (rest of code for disabling buttons and updating status)
+    }
+
+    function checkLocation() {
+      // ... (existing code to get user coordinates and display them)
+
+      if (isPointInPolygon(userCoordinates, cornerCoordinates)) {
+        document.getElementById('status').innerText = 'You are within the classroom boundaries.';
+      } else {
+        document.getElementById('status').innerText = 'You are outside the classroom boundaries.';
+      }
+    }
+
+    // Function to check if a point is inside the polygon (replace with your implementation)
+    function isPointInPolygon(point, polygon) {
+      // Implement the Ray Casting algorithm here to check if the point is inside the polygon defined by the corner coordinates
+      // This function is not provided in this code snippet, but you can find online resources or libraries that implement Ray Casting for point-in-polygon checks.
+    }
+
+    // Handle geolocation errors (optional)
+    function errorCallback(error) {
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          alert("User denied the request for Geolocation")
+      }
+    }
